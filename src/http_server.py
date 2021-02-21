@@ -4,9 +4,9 @@ import time
 from digitemp.master import UART_Adapter
 from digitemp.device import DS18B20
 
-
 bus = UART_Adapter('/dev/ttyUSB0')
 sensor = DS18B20(bus)
+
 hostname = '192.168.0.118'
 server_port = 8080
 print(sensor.get_temperature())
