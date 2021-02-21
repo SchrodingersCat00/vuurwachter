@@ -13,16 +13,12 @@ GUILD = os.getenv('DISCORD_GUILD')
 
 client = discord.Client()
 
-async def send_alert():
+async def send_alert(temp):
     global is_ready
     if not is_ready:
         raise ValueError('Discord not ready')
 
-    await channel.send('Hello world!')
-
-is_ready = None
-channel = None
-
+    await channel.send(f'Temperature too high!\nTemperature is: {temp}')
 
 @client.event
 async def on_ready():
@@ -43,15 +39,13 @@ async def on_ready():
         f'{guild.name}(id: {guild.id})'
     )
 
-def between_callback():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    temp_monitor = TemperatureMonitor(send_alert)
-    loop.run_until_complete(temp_monitor.monitor())
-    loop.close()
+async def main():
+    monitor = TemperatureMonitor(send_alert)
+    discord_task = loop.create_task(client.start(TOKEN))
+    print_task = loop.create_task(monitor.monitor())
+    await asyncio.wait([print_task, discord_task])
 
-# t = threading.Thread(target=between_callback)
-# t.start()
-temp_monitor = TemperatureMonitor(send_alert)
-temp_monitor.monitor()
-client.run(TOKEN)
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+    loop.close()
