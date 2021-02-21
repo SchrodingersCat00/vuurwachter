@@ -3,6 +3,7 @@ from digitemp.master import UART_Adapter
 from digitemp.device import DS18B20
 import random
 import asyncio
+import logging
 
 
 class TemperatureMonitor:
@@ -13,9 +14,13 @@ class TemperatureMonitor:
 
     async def check_temp(self):
         cur_temp = self.sensor.get_temperature()
-        if cur_temp > 23:
-            await self.cbfunc(cur_temp)
-        print(cur_temp)
+        # logging.info(f'Temperature is: {cur_temp}')
+        if cur_temp > 25:
+            try:
+                await self.cbfunc(cur_temp)
+            except ValueError:
+                logging.warning(f'Temperature is too high but discord is not initialized yet!')
+
 
     async def monitor(self):
         while True:

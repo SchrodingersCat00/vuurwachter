@@ -6,12 +6,21 @@ import threading
 from dotenv import load_dotenv
 from temp_monitor import TemperatureMonitor
 import asyncio
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s,%(msecs)d %(levelname)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 GUILD = os.getenv('DISCORD_GUILD')
 
 client = discord.Client()
+is_ready = None
 
 async def send_alert(temp):
     global is_ready
@@ -39,6 +48,19 @@ async def on_ready():
         f'{guild.name}(id: {guild.id})'
     )
 
+def handle_exception(loop, context):
+    # context["message"] will always be there; but context["exception"] may not
+    msg = context.get("exception", context["message"])
+    logging.error(f"Caught exception: {msg}")
+    logging.info("Shutting down...")
+    asyncio.create_task(shutdown(loop))
+
+async def shutdown(loop, signal=None):
+    """Cleanup tasks tied to the service's shutdown."""
+    if signal:
+        logging.info(f"Received exit signal {signal.name}...")
+    logging.info("Closing database connections")
+
 async def main():
     monitor = TemperatureMonitor(send_alert)
     discord_task = loop.create_task(client.start(TOKEN))
@@ -47,5 +69,6 @@ async def main():
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
+    loop.set_exception_handler(handle_exception)
     loop.run_until_complete(main())
     loop.close()
