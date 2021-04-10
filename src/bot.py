@@ -61,14 +61,22 @@ async def shutdown(loop, signal=None):
         logging.info(f"Received exit signal {signal.name}...")
     logging.info("Closing database connections")
 
-async def main():
+def main():
     monitor = TemperatureMonitor(send_alert)
-    discord_task = loop.create_task(client.start(TOKEN))
-    print_task = loop.create_task(monitor.monitor())
-    await asyncio.wait([print_task, discord_task])
+    loop = asyncio.get_event_loop()
+    try:
+        loop.run_until_complete(
+            asyncio.gather(
+                client.start(TOKEN),
+                monitor.monitor()
+            ),
+        )
+    except KeyboardInterrupt:
+        loop.run_until_complete(client.close())
+        # cancel all tasks lingering
+    finally:
+        loop.close()
+
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.set_exception_handler(handle_exception)
-    loop.run_until_complete(main())
-    loop.close()
+    main()

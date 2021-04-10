@@ -14,15 +14,16 @@ class TemperatureMonitor:
 
     async def check_temp(self):
         cur_temp = self.sensor.get_temperature()
-        # logging.info(f'Temperature is: {cur_temp}')
-        if cur_temp > 25:
+        logging.info(f'Temperature is: {cur_temp}')
+        if cur_temp > 75:
             try:
                 await self.cbfunc(cur_temp)
             except ValueError:
                 logging.warning(f'Temperature is too high but discord is not initialized yet!')
 
-
     async def monitor(self):
         while True:
-            await asyncio.sleep(3)
-            await self.check_temp()
+            await asyncio.gather(
+                self.check_temp(),
+                asyncio.sleep(3)
+            )
