@@ -1,19 +1,22 @@
 # bot.py
-import os
-import time
-import discord
-import threading
-from dotenv import load_dotenv
-from temp_monitor import TemperatureMonitor
 import asyncio
 import logging
+import os
+import threading
+import time
+
+import discord
+from dotenv import load_dotenv
+
+from discord_notifier import DiscordNotifier
+from file_logger import FileLogger
+from temp_monitor import TemperatureMonitor
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s,%(msecs)d %(levelname)s: %(message)s",
     datefmt="%H:%M:%S",
 )
-
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -22,12 +25,12 @@ GUILD = os.getenv('DISCORD_GUILD')
 client = discord.Client()
 is_ready = None
 
-async def send_alert(temp):
+async def send_alert(msg):
     global is_ready
     if not is_ready:
         raise ValueError('Discord not ready')
 
-    await channel.send(f'Temperature too high!\nTemperature is: {temp}')
+    await channel.send(msg)
 
 @client.event
 async def on_ready():
@@ -62,7 +65,11 @@ async def shutdown(loop, signal=None):
     logging.info("Closing database connections")
 
 def main():
-    monitor = TemperatureMonitor(send_alert)
+    monitor = TemperatureMonitor()
+    flogger = FileLogger()
+    disc_notifier = DiscordNotifier(send_alert)
+    monitor.register_listener(flogger)
+    monitor.register_listener(disc_notifier)
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(
