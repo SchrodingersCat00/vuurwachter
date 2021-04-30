@@ -25,17 +25,22 @@ GUILD = os.getenv('DISCORD_GUILD')
 client = discord.Client()
 is_ready = None
 
-async def send_alert(msg):
+async def send_alert(msg, msg_type):
     global is_ready
     if not is_ready:
         raise ValueError('Discord not ready')
+    
+    if msg_type not in channel_dict:
+        logging.warning(f'Attempt to send message with unsupported message type: {msg_type}')
+        return 
 
-    await channel.send(msg)
+    await channel_dict[msg_type].send(msg)
 
 @client.event
 async def on_ready():
     global is_ready
-    global channel
+    global channel_dict
+    channel_dict = {}
     is_ready = True
     print(f'{client.user} has connected to Discord!')
     for guild in client.guilds:
@@ -43,13 +48,20 @@ async def on_ready():
             break
 
     for channel in guild.channels:
-        if channel.name == 'develop':
-            break
+        if channel.name == 'waarschuwing':
+            channel_dict['warning'] = channel
+        elif channel.name == 'info':
+            channel_dict['info'] = channel
+        elif channel.name == 'raspberry-info':
+            channel_dict['raspberry_info'] = channel
+        elif channel.name == 'gevaar':
+            channel_dict['danger'] = channel
 
-    print(
+    logging.info(
         f'{client.user} is connected to the following guild:\n'
         f'{guild.name}(id: {guild.id})'
     )
+    await channel_dict['raspberry_info'].send('Vuurwachter is connected after reboot')
 
 def handle_exception(loop, context):
     # context["message"] will always be there; but context["exception"] may not

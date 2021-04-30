@@ -31,7 +31,7 @@ class Burning(State):
     async def handle(self, temp, alertfunc) -> State:
         if temp >= 75:
             try:
-                await alertfunc(f'Temperature too high!\nTemperature is: {temp}')
+                await alertfunc(f'Temperatuur is te hoog!\nDe temperatuur is: {temp}°C.', 'warning')
             except ValueError:
                 logging.warning(f'Temperature is too high but Discord is not initialized yet!')
         
@@ -39,7 +39,7 @@ class Burning(State):
 
         elif temp < 50:
             try:
-                await alertfunc(f'Temperature is too low!\nTemperature is: {temp}')
+                await alertfunc(f'Temperatuur is te laag!\nDe temperatuur is: {temp}°C.', 'info')
             except ValueError:
                 logging.warning(f'Temperature is too low but Discord is not initialized yet!')
 
@@ -58,7 +58,7 @@ class Dying(State):
 
         if temp < 30:
             try:
-                await alertfunc(f'The fire has died.')
+                await alertfunc(f'Het vuur is uit.', 'info')
             except ValueError:
                 logging.warning(f'Fire has died but Discord is not initialized yet!')
 
@@ -72,13 +72,19 @@ class Danger(State):
         self.name = 'Danger'
     
     async def handle(self, temp, alertfunc) -> State:
-        if temp < 75:
+        if temp < 70:
             try:
-                await alertfunc(f'The fire has gone below 75: {temp}.')
+                await alertfunc(f'De temperatuur is terug onder 70°C gedaald.\nDe temperatuur is: {temp}°C.', 'info')
             except ValueError:
-                logging.warning(f'Fire has gone below 75 but Discord is not initialized yet!')
+                logging.warning(f'Fire has gone below 70 but Discord is not initialized yet!')
 
             return Burning()
         
+        if temp > 80:
+            try:
+                await alertfunc(f'Gevaar: Het vuur is warmer dan 80°C!\nDe temperatuur is: {temp}°C.', 'danger')
+            except ValueError:
+                logging.warning(f'Fire is higher than 80 degrees but Discord is not initialized yet!')
+
         else:
             return Danger()
