@@ -34,5 +34,5 @@ class TemperatureMonitor:
         while True:
             await asyncio.gather(
                 self.notify_listeners(),
-                asyncio.sleep(3)
+                asyncio.sleep(10)
             )

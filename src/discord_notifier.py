@@ -86,5 +86,4 @@ class Danger(State):
             except ValueError:
                 logging.warning(f'Fire is higher than 80 degrees but Discord is not initialized yet!')
 
-        else:
-            return Danger()
+        return Danger()
